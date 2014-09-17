@@ -11,17 +11,16 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20140917203518) do
+ActiveRecord::Schema.define(version: 20140917231359) do
 
-  create_table "songs", force: true do |t|
+  create_table "users", force: true do |t|
     t.string   "name"
-    t.string   "artist"
-    t.string   "device_id"
-    t.string   "username"
+    t.string   "avatar_url"
+    t.string   "song_name"
+    t.string   "song_artist"
+    t.integer  "distance"
     t.datetime "created_at"
     t.datetime "updated_at"
   end
-
-  add_index "songs", ["device_id"], name: "index_songs_on_device_id"
 
 end

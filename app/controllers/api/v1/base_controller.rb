@@ -1,5 +1,5 @@
 module Api::V1
   class BaseController < ApplicationController
-    skip_before_action :verify_authenticiy_token
+    skip_before_action :verify_authenticity_token
   end
 end
