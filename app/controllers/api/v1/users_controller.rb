@@ -17,7 +17,7 @@ module Api::V1
 
     def remove
       @user.find_by(name: params[:name])
-      @user.destroy
+      @user.destroy if @user
       render json: {status: 'ok'}
     end
 
