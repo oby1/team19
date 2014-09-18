@@ -6,8 +6,11 @@
 </style>
 <div class="jumbotron">
   <p>I got the Blues(tooth)</p>
+
   <h1>Love to share music?</h1>
-  <p>See someone bobbing to music on the other side of the room? Want to know what that person is grooving to? This is the perfect product for you! Explore new music right around you. Literally. Within 50 feet.
+
+  <p>See someone bobbing to music on the other side of the room? Want to know what that person is grooving to? This is
+    the perfect product for you! Explore new music right around you. Literally. Within 50 feet.
 </div>
 <ul id="tabList" class="nav nav-tabs nav-justified" role="tablist">
   <li class="active">
@@ -28,40 +31,47 @@
   <div id="songSharing" class="tab-pane active">
     <div class="container tabPage">
       <div class="page-header">
-        <h1>Songs Playing <small><a href="#">click here to refresh.</a></small></h1>
+        <h1>Songs Playing
+          <small><a href="#">click here to refresh.</a></small>
+        </h1>
       </div>
       <style>
 
-      .bar {
-        font: 10px sans-serif;
-        background-color: #0099FF;
-        text-align: right;
-        margin: 1px;
-        color: white;
-      }
-      .bar {
-        padding-top: 15px;
-        padding-bottom: 15px;
-        padding-right: 15px;
-      }
-      .info {
-      }
+        .bar {
+          font: 10px sans-serif;
+          background-color: #0099FF;
+          text-align: right;
+          margin: 1px;
+          color: white;
+        }
+
+        .bar {
+          padding-top: 15px;
+          padding-bottom: 15px;
+          padding-right: 15px;
+        }
+
+        .info {
+        }
 
       </style>
       <div class="chart">
-        <div id="person2" class="bar" style="display: inline-block;  width: 40px;">4 ft</div><img style="display: inline-block; width: 40px; height: 40px" src="http://fc06.deviantart.net/fs38/f/2008/357/7/f/Musical_Tuzki_by_succubolilith.gif"/>
-        <div class="info">
-          <div><div class="glyphicon glyphicon-user"></div> Steve Jobs</div>
-          <div><div class="glyphicon glyphicon-headphones"></div> Music: Idina Menzel - Let It Go</div>
-        </div>
-        <div id="person2" class="bar" style="display: inline-block;  width: 150px;">15 ft</div><img style="display: inline-block; width: 40px; height: 40px" src="http://fc06.deviantart.net/fs38/f/2008/357/7/f/Musical_Tuzki_by_succubolilith.gif"/>
-        <div class="info">
-          <div><div class="glyphicon glyphicon-user"></div> Shirley Temple</div>
-          <div><div class="glyphicon glyphicon-headphones"></div> Music: Maroon 5 - Maps</div>
-        </div>
+        <% @users.each do |user| %>
+          <% next if !user.distance || user.distance.abs > 80 %>
+          <div id="person2" class="bar" style="display: inline-block;  width: <%= user.distance.abs * 100 / 80.0 %>%;">distance</div>
+          <img style="display: inline-block; width: 40px; height: 40px" src="http://fc06.deviantart.net/fs38/f/2008/357/7/f/Musical_Tuzki_by_succubolilith.gif"/>
+
+          <div class="info">
+            <div>
+              <div class="glyphicon glyphicon-user"></div> <%= user.name %></div>
+            <div>
+              <div class="glyphicon glyphicon-headphones"></div> <%= user.song_artist %> - <%= user.song_name %></div>
+          </div>
+        <% end %>
       </div>
     </div>
   </div>
+
   <div id="team" class="tab-pane">
     <div class="container tabPage">
       <ol>
@@ -71,6 +81,15 @@
         <li>John Murphy</li>
         <li>Alex L-R</li>
       </ol>
-    <div class="container">
+      <div class="container">
+      </div>
+
+    </div>
   </div>
 </div>
+
+<script>
+  setTimeout(function () {
+    window.location.reload();
+  }, 3000)
+</script>
