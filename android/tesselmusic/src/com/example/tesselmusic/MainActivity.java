@@ -1,20 +1,5 @@
 package com.example.tesselmusic;
 
-import java.io.IOException;
-import java.io.UnsupportedEncodingException;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.Map;
-
-import org.apache.http.client.ClientProtocolException;
-import org.apache.http.client.ResponseHandler;
-import org.apache.http.client.methods.HttpPost;
-import org.apache.http.entity.StringEntity;
-import org.apache.http.impl.client.BasicResponseHandler;
-import org.apache.http.impl.client.DefaultHttpClient;
-import org.json.JSONException;
-import org.json.JSONObject;
-
 import android.app.Activity;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
@@ -27,10 +12,29 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.SharedPreferences;
+import android.net.Uri;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
+import android.widget.Button;
+import android.widget.ImageView;
+import android.widget.TextView;
+import org.apache.http.client.ClientProtocolException;
+import org.apache.http.client.ResponseHandler;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.entity.StringEntity;
+import org.apache.http.impl.client.BasicResponseHandler;
+import org.apache.http.impl.client.DefaultHttpClient;
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.io.IOException;
+import java.io.UnsupportedEncodingException;
+import java.util.HashMap;
+import java.util.Map;
 
 
 public class MainActivity extends Activity {
@@ -40,6 +44,13 @@ public class MainActivity extends Activity {
 	BluetoothAdapter mBluetoothAdapter = null;
 	String mCurrentArtist = null;
 	String mCurrentSong = null;
+
+    IntentFilter mMusicChangedIntentFilter;
+
+    TextView mNameTextView;
+    TextView mAvatarTextView;
+
+    SharedPreferences mPrefs;
 	
 	// Various callback methods defined by the BLE API.
 	private final BluetoothGattCallback mGattCallback = new BluetoothGattCallback() {
@@ -100,12 +111,12 @@ public class MainActivity extends Activity {
 				    android.util.Log.i("tesselmusic", "Device found!: " + device.getName() + " Signal strength: " + Integer.toString(rssi));
 					if (device.getName() != null && device.getName().equals("Team19")) {
 						//device.conn
-					    android.util.Log.i("tesselmusic", "Device found!: " + device.getName() + " Signal strength: " + Integer.toString(rssi));
+					    android.util.Log.i("tesselmusic", "Team19 Beacon: " + device.getName() + " Signal strength: " + Integer.toString(rssi));
 					    final DefaultHttpClient httpclient = new DefaultHttpClient();
 					    final HttpPost httpost = new HttpPost("http://192.168.1.229:8080/api/v1/users");
 					    Map<String, String> params = new HashMap<String, String>();
-					    params.put("name", "FOO");
-					    params.put("avatar_url", "FOO");
+					    params.put("name", mNameTextView.getText().toString());
+					    params.put("avatar_url", mAvatarTextView.getText().toString());
 					    params.put("song_name", mCurrentSong);
 					    params.put("song_artist", mCurrentArtist);
 					    params.put("distance", Integer.toString(rssi));
@@ -126,21 +137,25 @@ public class MainActivity extends Activity {
 					    httpost.setEntity(se);
 					    httpost.setHeader("Accept", "application/json");
 					    httpost.setHeader("Content-type", "application/json");
+                        Log.d("tesselmusic", holder.toString());
+
 					    final ResponseHandler responseHandler = new BasicResponseHandler();
-						    android.util.Log.i("tesselmusic", "Sending music data");
-						    new Thread(new Runnable() {
-						        public void run() {
-						          try {
-									httpclient.execute(httpost, responseHandler);
-								} catch (ClientProtocolException e) {
-									// TODO Auto-generated catch block
-									e.printStackTrace();
-								} catch (IOException e) {
-									// TODO Auto-generated catch block
-									e.printStackTrace();
-								}
-						        }
-						      }).start();
+						android.util.Log.i("tesselmusic", "Sending music data");
+
+                        new Thread(new Runnable() {
+                            public void run() {
+                              try {
+                                httpclient.execute(httpost, responseHandler);
+                            } catch (ClientProtocolException e) {
+                                // TODO Auto-generated catch block
+                                e.printStackTrace();
+                            } catch (IOException e) {
+                                // TODO Auto-generated catch block
+                                e.printStackTrace();
+                            }
+                            }
+                          }).start();
+
 							//httpclient.execute(httpost, responseHandler);
 					}   
 				}
@@ -159,13 +174,51 @@ public class MainActivity extends Activity {
         mBluetoothAdapter = bluetoothManager.getAdapter();
         mBluetoothAdapter.startLeScan(mLeScanCallback);
 
-        IntentFilter iF = new IntentFilter();
-        iF.addAction("com.android.music.metachanged");
-        iF.addAction("com.android.music.playstatechanged");
-        iF.addAction("com.android.music.playbackcomplete");
-        iF.addAction("com.android.music.queuechanged"); registerReceiver(mReceiver, iF);
+        mMusicChangedIntentFilter = new IntentFilter();
+        mMusicChangedIntentFilter.addAction("com.android.music.metachanged");
+        mMusicChangedIntentFilter.addAction("com.android.music.playstatechanged");
+        mMusicChangedIntentFilter.addAction("com.android.music.playbackcomplete");
+        mMusicChangedIntentFilter.addAction("com.android.music.queuechanged");
+
+        mNameTextView = (TextView)findViewById(R.id.name);
+        mAvatarTextView = (TextView)findViewById(R.id.avatar);
+
+        mPrefs = getSharedPreferences("com.opower.team19", Context.MODE_PRIVATE);
+
+        final ImageView avatarImageView = (ImageView)findViewById(R.id.avatarImage);
+        mAvatarTextView.setOnFocusChangeListener(new TextView.OnFocusChangeListener() {
+            @Override
+            public void onFocusChange(View v, boolean hasFocus) {
+                if (!hasFocus) {
+//                    Uri avatarUri = Uri.parse(mAvatarTextView.getText().toString());
+//                    avatarImageView.setImageURI(avatarUri);
+                }
+            }
+        });
+
+         mNameTextView.setText(mPrefs.getString("com.opower.team19.name", ""));
+         mAvatarTextView.setText(mPrefs.getString("com.opower.team19.avatar", ""));
+
+         ((Button)findViewById(R.id.save)).setOnClickListener(new Button.OnClickListener() {
+             @Override
+             public void onClick(View v) {
+                 mPrefs.edit().putString("com.opower.team19.name", mNameTextView.getText().toString()).commit();
+                 mPrefs.edit().putString("com.opower.team19.avatar", mAvatarTextView.getText().toString()).commit();
+             }
+         });
     }
 
+    @Override
+    protected void onResume() {
+        super.onResume();
+        registerReceiver(mReceiver, mMusicChangedIntentFilter);
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+//        unregisterReceiver(mReceiver);
+    }
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -198,6 +251,9 @@ public class MainActivity extends Activity {
 			Log.d("Music", artist + ":" + album + ":" + track);
 			mCurrentSong = intent.getStringExtra("track");
 			mCurrentArtist = intent.getStringExtra("artist");
+
+            TextView textView = (TextView)findViewById(R.id.nowplaying);
+            textView.setText(mCurrentSong);
 		}
 	};
 }
