@@ -1,5 +1,20 @@
 package com.example.tesselmusic;
 
+import java.io.IOException;
+import java.io.UnsupportedEncodingException;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Map;
+
+import org.apache.http.client.ClientProtocolException;
+import org.apache.http.client.ResponseHandler;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.entity.StringEntity;
+import org.apache.http.impl.client.BasicResponseHandler;
+import org.apache.http.impl.client.DefaultHttpClient;
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import android.app.Activity;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
@@ -66,7 +81,15 @@ public class MainActivity extends Activity {
 			}
 		}
 	};
-	
+
+	private static JSONObject getJsonObjectFromMap(Map<String, String> params) throws JSONException {
+	    JSONObject json = new JSONObject();
+
+		for (Map.Entry<String, String> entry : params.entrySet()) {
+			json.put(entry.getKey(), entry.getValue());
+		}
+		return json;
+	}
 	// Device scan callback.
 	private BluetoothAdapter.LeScanCallback mLeScanCallback = new BluetoothAdapter.LeScanCallback() {
 		@Override
@@ -74,11 +97,52 @@ public class MainActivity extends Activity {
 			runOnUiThread(new Runnable() {
 				@Override
 				public void run() {
+				    android.util.Log.i("tesselmusic", "Device found!: " + device.getName() + " Signal strength: " + Integer.toString(rssi));
 					if (device.getName() != null && device.getName().equals("Team19")) {
 						//device.conn
 					    android.util.Log.i("tesselmusic", "Device found!: " + device.getName() + " Signal strength: " + Integer.toString(rssi));
+					    final DefaultHttpClient httpclient = new DefaultHttpClient();
+					    final HttpPost httpost = new HttpPost("http://192.168.1.229:8080/api/v1/users");
+					    Map<String, String> params = new HashMap<String, String>();
+					    params.put("name", "FOO");
+					    params.put("avatar_url", "FOO");
+					    params.put("song_name", mCurrentSong);
+					    params.put("song_artist", mCurrentArtist);
+					    params.put("distance", Integer.toString(rssi));
+					    JSONObject holder = null;
+						try {
+							holder = getJsonObjectFromMap(params);
+						} catch (JSONException e) {
+							// TODO Auto-generated catch block
+							e.printStackTrace();
+						}
+					    StringEntity se = null;
+						try {
+							se = new StringEntity(holder.toString());
+						} catch (UnsupportedEncodingException e) {
+							// TODO Auto-generated catch block
+							e.printStackTrace();
+						}
+					    httpost.setEntity(se);
+					    httpost.setHeader("Accept", "application/json");
+					    httpost.setHeader("Content-type", "application/json");
+					    final ResponseHandler responseHandler = new BasicResponseHandler();
+						    android.util.Log.i("tesselmusic", "Sending music data");
+						    new Thread(new Runnable() {
+						        public void run() {
+						          try {
+									httpclient.execute(httpost, responseHandler);
+								} catch (ClientProtocolException e) {
+									// TODO Auto-generated catch block
+									e.printStackTrace();
+								} catch (IOException e) {
+									// TODO Auto-generated catch block
+									e.printStackTrace();
+								}
+						        }
+						      }).start();
+							//httpclient.execute(httpost, responseHandler);
 					}   
-					//device.connectGatt(getApplicationContext(), true, mGattCallback);
 				}
 			});
 		}
@@ -121,19 +185,19 @@ public class MainActivity extends Activity {
         }
         return super.onOptionsItemSelected(item);
     }
-    
-    private BroadcastReceiver mReceiver = new BroadcastReceiver() { @Override
-    	public void onReceive(Context context, Intent intent)
-    	{
-    	String action = intent.getAction();
-    	String cmd = intent.getStringExtra("command");
-    	Log.d("mIntentReceiver.onReceive ", action + " / " + cmd);
-    	String artist = intent.getStringExtra("artist");
-    	String album = intent.getStringExtra("album");
-    	String track = intent.getStringExtra("track");
-    	Log.d("Music",artist+":"+album+":"+track);
-    	mCurrentSong = intent.getStringExtra("track");
-        mCurrentArtist = intent.getStringExtra("artist");
-    	}
-    	};
+
+	private BroadcastReceiver mReceiver = new BroadcastReceiver() {
+		@Override
+		public void onReceive(Context context, Intent intent) {
+			String action = intent.getAction();
+			String cmd = intent.getStringExtra("command");
+			Log.d("mIntentReceiver.onReceive ", action + " / " + cmd);
+			String artist = intent.getStringExtra("artist");
+			String album = intent.getStringExtra("album");
+			String track = intent.getStringExtra("track");
+			Log.d("Music", artist + ":" + album + ":" + track);
+			mCurrentSong = intent.getStringExtra("track");
+			mCurrentArtist = intent.getStringExtra("artist");
+		}
+	};
 }
