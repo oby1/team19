@@ -108,7 +108,7 @@ public class MainActivity extends Activity {
 			runOnUiThread(new Runnable() {
 				@Override
 				public void run() {
-				    android.util.Log.i("tesselmusic", "Device found!: " + device.getName() + " Signal strength: " + Integer.toString(rssi));
+//				    android.util.Log.i("tesselmusic", "Device found!: " + device.getName() + " Signal strength: " + Integer.toString(rssi));
 					if (device.getName() != null && device.getName().equals("Team19")) {
 						//device.conn
 					    android.util.Log.i("tesselmusic", "Team19 Beacon: " + device.getName() + " Signal strength: " + Integer.toString(rssi));
@@ -215,9 +215,9 @@ public class MainActivity extends Activity {
     }
 
     @Override
-    protected void onPause() {
-        super.onPause();
-//        unregisterReceiver(mReceiver);
+    protected void onDestroy() {
+        super.onDestroy();
+        unregisterReceiver(mReceiver);
     }
 
     @Override
